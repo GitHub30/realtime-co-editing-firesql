@@ -1,29 +1,88 @@
 <template>
   <div class="container">
-    <textarea ref="text" v-model="text" class="text fontSize" />
+    <textarea ref="textarea" :value="$store.state.text" class="text fontSize" />
     <span ref="hiddenText" class="hiddenText fontSize" hidden />
-    <span ref="name" class="name">たろう</span>
-    <div ref="caret" class="caret" />
+    <span
+      v-for="(c, i) in $store.state.collaborators"
+      :key="i"
+      ref="name"
+      :style="{
+        left: c.left - 1 + 'px',
+        top:
+          (c.numOfLines - 1) * caretHeight -
+          16 -
+          $refs.textarea.scrollTop +
+          'px',
+        backgroundColor: c.color
+      }"
+      class="name"
+      :hidden="c.name === name"
+    >{{ name }}</span><!-- eslint-disable-line prettier/prettier -->
+    <div
+      v-for="(c, i) in $store.state.collaborators"
+      :key="10000 + i"
+      ref="caret"
+      :style="{
+        left: c.left - 1 + 'px',
+        top: (c.numOfLines - 1) * caretHeight - $refs.textarea.scrollTop + 'px',
+        height: caretHeight + 'px',
+        backgroundColor: c.color
+      }"
+      class="caret"
+      :hidden="c.name === name"
+    />
   </div>
 </template>
 
 <script>
+const collaborators = [
+  { name: '日本太郎', color: 'blue' },
+  { name: '坂本龍馬', color: 'brown' },
+  { name: '聖徳太子', color: 'orange' },
+  { name: '織田信長', color: 'green' },
+  { name: '豊臣秀吉', color: 'purple' }
+]
+
+function choose(choices) {
+  const index = Math.floor(Math.random() * choices.length)
+  return choices[index]
+}
+
 export default {
   components: {},
   data() {
+    const collaborator = choose(collaborators)
     return {
-      text: 'あいにできることはまだある会',
+      val: '',
+      name: collaborator.name,
+      color: collaborator.color,
       selectionStart: null,
-      isComposing: false
+      isComposing: false,
+      caretHeight: 35
     }
   },
-  mounted() {
-    this.selectionStart = this.$refs.text.selectionStart
-    this.$refs.text.addEventListener(
+  async mounted() {
+    await this.$db.query(
+      `CREATE TABLE IF NOT EXISTS co_editor (id INT NOT NULL AUTO_INCREMENT,json JSON NULL,PRIMARY KEY (id))`
+    )
+    this.$store.dispatch('SYNC_STATE', {
+      table: 'co_editor',
+      pkColumnName: 'id',
+      pk: 1,
+      jsonColumnName: 'json'
+    })
+    // eslint-disable-next-line no-console
+    console.log(
+      this.$refs.textarea,
+      document.querySelector('#text2'),
+      process.browser
+    )
+    this.selectionStart = this.$refs.textarea.selectionStart
+    this.$refs.textarea.addEventListener(
       'compositionstart',
       () => (this.isComposing = true)
     )
-    this.$refs.text.addEventListener(
+    this.$refs.textarea.addEventListener(
       'compositionend',
       () => (this.isComposing = false)
     )
@@ -33,29 +92,24 @@ export default {
     onSelectionChange() {
       requestAnimationFrame(this.onSelectionChange)
       if (this.isComposing) return
-      const selectionStart = this.$refs.text.selectionStart
+      const selectionStart = this.$refs.textarea.selectionStart
       const selectionChange = selectionStart !== this.selectionStart
       this.selectionStart = selectionStart
       if (!selectionChange) return
-      const lines = this.text.substring(0, selectionStart).split('\n')
+      const value = this.$refs.textarea.value
+      if (value.length === selectionStart && value.includes('\n')) return
+      const lines = value.substring(0, selectionStart).split('\n')
       const numOfLines = lines.length
       this.$refs.hiddenText.textContent = lines.pop()
       // eslint-disable-next-line no-undef
-      const fauxpos = $(this.$refs.hiddenText).outerWidth()
-      const caretHeight = 35
-      this.$refs.caret.style.left = fauxpos - 1 + 'px'
-      this.$refs.caret.style.top =
-        (numOfLines - 1) * caretHeight - this.$refs.text.scrollTop + 'px'
-      this.$refs.caret.style.height = caretHeight + 'px'
-      this.$refs.caret.style.background = 'orange'
-      this.$refs.name.style.left = fauxpos - 1 + 'px'
-      this.$refs.name.style.top =
-        (numOfLines - 1) * caretHeight - 16 - this.$refs.text.scrollTop + 'px'
-      this.$refs.name.style.background = 'orange'
-      // eslint-disable-next-line no-console
-      // console.log(numOfLines + '行 ' + fauxpos + ' px')
-      // eslint-disable-next-line no-console
-      console.log(selectionChange)
+      const left = $(this.$refs.hiddenText).outerWidth()
+      this.$store.commit('update', {
+        text: value,
+        name: this.name,
+        color: this.color,
+        numOfLines,
+        left
+      })
     }
   }
 }
