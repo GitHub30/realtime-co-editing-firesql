@@ -12,17 +12,32 @@ export default {
   components: {},
   data() {
     return {
-      text: 'あいにできることはまだある会'
+      text: 'あいにできることはまだある会',
+      selectionStart: null,
+      isComposing: false
     }
   },
   mounted() {
+    this.selectionStart = this.$refs.text.selectionStart
+    this.$refs.text.addEventListener(
+      'compositionstart',
+      () => (this.isComposing = true)
+    )
+    this.$refs.text.addEventListener(
+      'compositionend',
+      () => (this.isComposing = false)
+    )
     requestAnimationFrame(this.onSelectionChange)
   },
   methods: {
     onSelectionChange() {
-      const lines = this.text
-        .substring(0, this.$refs.text.selectionStart)
-        .split('\n')
+      requestAnimationFrame(this.onSelectionChange)
+      if (this.isComposing) return
+      const selectionStart = this.$refs.text.selectionStart
+      const selectionChange = selectionStart !== this.selectionStart
+      this.selectionStart = selectionStart
+      if (!selectionChange) return
+      const lines = this.text.substring(0, selectionStart).split('\n')
       const numOfLines = lines.length
       this.$refs.hiddenText.textContent = lines.pop()
       // eslint-disable-next-line no-undef
@@ -38,8 +53,9 @@ export default {
         (numOfLines - 1) * caretHeight - 16 - this.$refs.text.scrollTop + 'px'
       this.$refs.name.style.background = 'orange'
       // eslint-disable-next-line no-console
-      console.log(numOfLines + '行 ' + fauxpos + ' px')
-      requestAnimationFrame(this.onSelectionChange)
+      // console.log(numOfLines + '行 ' + fauxpos + ' px')
+      // eslint-disable-next-line no-console
+      console.log(selectionChange)
     }
   }
 }
