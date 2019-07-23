@@ -17,7 +17,7 @@
       }"
       class="name"
       :hidden="c.name === name"
-    >{{ name }}</span><!-- eslint-disable-line prettier/prettier -->
+    >{{ c.name }}</span><!-- eslint-disable-line prettier/prettier -->
     <div
       v-for="(c, i) in $store.state.collaborators"
       :key="10000 + i"
@@ -31,6 +31,7 @@
       class="caret"
       :hidden="c.name === name"
     />
+    <h1>{{ name }}でログインしています。</h1>
   </div>
 </template>
 
@@ -171,5 +172,10 @@ export default {
 
 .fontSize {
   font-size: 24px;
+}
+h1 {
+  position: fixed;
+  top: 16px;
+  left: 96px;
 }
 </style>
