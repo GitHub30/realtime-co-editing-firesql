@@ -1,47 +1,50 @@
 <template>
   <div class="container">
-    <div>
-      <logo />
-      <h1 class="title">
-        realtime-co-editing-firesql
-      </h1>
-      <h2 class="subtitle">
-        Collaborative real-time editor with VuexFireSQL
-      </h2>
-      <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-      </div>
-    </div>
+    <textarea ref="text" v-model="text" class="text" />
+    <span ref="hiddenText" class="hiddenText" hidden />
+    <div ref="caret" class="caret" />
   </div>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-
 export default {
-  components: {
-    Logo
+  components: {},
+  data() {
+    return {
+      text:
+        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+    }
+  },
+  mounted() {
+    document.addEventListener('selectionchange', this.onSelectionChange)
+  },
+  destroyed() {
+    document.removeEventListener('selectionchange', this.onSelectionChange)
+  },
+  methods: {
+    onSelectionChange() {
+      const lines = this.text
+        .substring(0, this.$refs.text.selectionStart)
+        .split('\n')
+      const numOfLines = lines.length
+      this.$refs.hiddenText.textContent = lines.pop()
+      // eslint-disable-next-line no-undef
+      const fauxpos = $(this.$refs.hiddenText).outerWidth()
+      this.$refs.caret.style.left = fauxpos + 2 + 'px'
+      this.$refs.caret.style.top =
+        (numOfLines - 1) * 19 + 2 - this.$refs.text.scrollTop + 'px'
+      // eslint-disable-next-line no-console
+      console.log(numOfLines + '行 ' + fauxpos + ' px')
+    }
   }
 }
 </script>
 
 <style>
 .container {
-  margin: 0 auto;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  position: relative;
+  margin: 64px;
 }
 
 .title {
@@ -64,5 +67,27 @@ export default {
 
 .links {
   padding-top: 15px;
+}
+
+.text {
+  border: 0;
+  width: 100%;
+  height: calc(100vh - 64px);
+  resize: none;
+  outline: none;
+}
+
+.caret {
+  width: 1px;
+  background: orange;
+  height: 19px;
+  position: absolute;
+  top: 1px;
+  left: 107px;
+}
+
+.hiddenText {
+  font-size: 13.3333px;
+  font-family: monospace;
 }
 </style>
