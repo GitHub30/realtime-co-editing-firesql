@@ -1,7 +1,8 @@
 <template>
   <div class="container">
-    <textarea ref="text" v-model="text" class="text" />
-    <span ref="hiddenText" class="hiddenText" hidden />
+    <textarea ref="text" v-model="text" class="text fontSize" />
+    <span ref="hiddenText" class="hiddenText fontSize" hidden />
+    <span ref="name" class="name">たろう</span>
     <div ref="caret" class="caret" />
   </div>
 </template>
@@ -11,15 +12,11 @@ export default {
   components: {},
   data() {
     return {
-      text:
-        'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'
+      text: 'あいにできることはまだある会'
     }
   },
   mounted() {
-    document.addEventListener('selectionchange', this.onSelectionChange)
-  },
-  destroyed() {
-    document.removeEventListener('selectionchange', this.onSelectionChange)
+    requestAnimationFrame(this.onSelectionChange)
   },
   methods: {
     onSelectionChange() {
@@ -30,11 +27,19 @@ export default {
       this.$refs.hiddenText.textContent = lines.pop()
       // eslint-disable-next-line no-undef
       const fauxpos = $(this.$refs.hiddenText).outerWidth()
-      this.$refs.caret.style.left = fauxpos + 2 + 'px'
+      const caretHeight = 35
+      this.$refs.caret.style.left = fauxpos - 1 + 'px'
       this.$refs.caret.style.top =
-        (numOfLines - 1) * 19 + 2 - this.$refs.text.scrollTop + 'px'
+        (numOfLines - 1) * caretHeight - this.$refs.text.scrollTop + 'px'
+      this.$refs.caret.style.height = caretHeight + 'px'
+      this.$refs.caret.style.background = 'orange'
+      this.$refs.name.style.left = fauxpos - 1 + 'px'
+      this.$refs.name.style.top =
+        (numOfLines - 1) * caretHeight - 16 - this.$refs.text.scrollTop + 'px'
+      this.$refs.name.style.background = 'orange'
       // eslint-disable-next-line no-console
       console.log(numOfLines + '行 ' + fauxpos + ' px')
+      requestAnimationFrame(this.onSelectionChange)
     }
   }
 }
@@ -42,9 +47,8 @@ export default {
 
 <style>
 .container {
-  min-height: 100vh;
   position: relative;
-  margin: 64px;
+  margin: 64px 64px 0;
 }
 
 .title {
@@ -71,23 +75,31 @@ export default {
 
 .text {
   border: 0;
+  padding: 0;
   width: 100%;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 128px);
   resize: none;
   outline: none;
 }
 
-.caret {
-  width: 1px;
-  background: orange;
-  height: 19px;
+.name {
   position: absolute;
-  top: 1px;
-  left: 107px;
+  padding: 0px 4px;
+  color: white;
+  font-size: 14px;
+}
+
+.caret {
+  width: 2px;
+  position: absolute;
 }
 
 .hiddenText {
   font-size: 13.3333px;
   font-family: monospace;
+}
+
+.fontSize {
+  font-size: 24px;
 }
 </style>
